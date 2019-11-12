@@ -1,0 +1,76 @@
+/*
+ * halOSC.c
+ */	
+
+#include "halLCD.h"
+#include "SI_EFM8SB2_Register_Enums.h"
+
+
+void halLCD_InitLCD(void)
+{
+	TMR2CN0 &= ~(TMR2CN0_TR2__BMASK);
+
+	TMR2CN0 &= ~TMR2CN0_T2XCLK__FMASK;
+	TMR2CN0 |= TMR2CN0_T2XCLK__SYSCLK_DIV_12_CAP_CMP0;
+
+
+//	TMR2H = (0xFE << TMR2H_TMR2H__SHIFT);   // 5 MHz  1.0 ms
+//	TMR2L = (0x5F << TMR2L_TMR2L__SHIFT);
+//	TMR2RLH = (0xFE << TMR2RLH_TMR2RLH__SHIFT);
+//	TMR2RLL = (0x5F << TMR2RLL_TMR2RLL__SHIFT);
+
+	TMR2H = (0xFF << TMR2H_TMR2H__SHIFT);   // 3 MHz  1.0 ms
+	TMR2L = (0x01 << TMR2L_TMR2L__SHIFT);
+	TMR2RLH = (0xFF << TMR2RLH_TMR2RLH__SHIFT);
+	TMR2RLL = (0x01 << TMR2RLL_TMR2RLL__SHIFT);
+
+	TMR2CN0 |= TMR2CN0_TR2__RUN;
+
+	CKCON0 |= CKCON0_T2MH__EXTERNAL_CLOCK | CKCON0_T2ML__EXTERNAL_CLOCK;
+
+	// Interrupt Enable
+	IE |= IE_EA__ENABLED | IE_ET2__ENABLED;
+////////////////////////////////////////////////////////////////////////////////////////////
+
+	XBR0 &= ~XBR0_URT0E__ENABLED;
+
+
+	P1MDIN |= 0x1F; //LCD PINS DIGITAL
+
+	P1MDOUT |= 0x1E;// PUSH-PULL LCD PINS
+    P1MASK &= ~P1MASK_B5__COMPARED;
+
+    P2MDOUT |= P2MDOUT_B7__PUSH_PULL;
+    P2 &= ~P2_B7__HIGH;
+}
+
+
+void halLCD_DeinitLCD(void)
+{
+	TMR2CN0 &= ~TMR2CN0_TR2__RUN;
+
+		// Interrupt Enable
+	IE &= ~IE_ET2__ENABLED;
+
+	XBR0 |= XBR0_URT0E__ENABLED;
+
+	P1      &= 0xE0; // LOW LCD PINS
+	P1MDOUT &= 0xE0; // OPEN-DRAIN LCD PINS
+	P1MDIN  &= 0xE0; // ANALOG LCD PINS
+
+    P1MASK |= P1MASK_B5__COMPARED;
+
+    P2MDOUT &= ~P2MDOUT_B7__PUSH_PULL;
+    P2 &= ~P2_B7__HIGH;
+}
+
+
+
+
+
+
+
+
+
+
+
